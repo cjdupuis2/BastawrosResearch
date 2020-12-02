@@ -10,6 +10,8 @@ clear; clc; close all;
 %---TO CHANGE
 directory = 'C:\Users\gurwo\Desktop\JakeJake\'; %pwd NEED TO CHANGE THIS TO YOUR DIRRECTORY
 pixSize = 1024; % (Jake this dosent need to change rn, but maybe in future)
+h_r_S=0.1; 
+h_r_ul=0.1; 
 
 %---DON'T NEED TO CHANGE
 %---Get the image data of the references from ToAverage folder
@@ -20,19 +22,16 @@ refImgsData = zeros(pixSize, pixSize, numRef); %This will contain the jpg data
 
 for i = 1:numRef
     refNames(i) = [directory 'ToAverage/' refDir(i).name]; %Absolute file path
-    refImgsData = xlsread(refNames(i));
-%     refImgsData(:,:,i) = temp(:,:,2); %temp(:,:,2) cause only want green (imread returns 3 dim matrix)
+    refImgsData(:,:,i) = xlsread(refNames(i));
+    
+    %Han filter for the each of images 
+    [wx,wy]=size(refImgsData(:,:,i));
+    mw = mean(mean(refImgsData(:,:,i)));
+    refImgsData(:,:,i) = refImgsData(:,:,i) - mw;
+    W=taphann2drect(wx,wy,h_r_S,h_r_ul);
+    refImgsData(:,:,i)=refImgsData(:,:,i).*W;
+    
 end
-
-%han filter for ref data.
-h_r_S=0.1; 
-h_r_ul=0.1; 
-[wx,wy]=size(refImgsData);
-mw = mean(mean(refImgsData));
-
-refImgsData = refImgsData - mw;
-W=taphann2drect(wx,wy,h_r_S,h_r_ul);
-refImgsData=refImgsData.*W;
 
 % ---Get the image data of the deformed from Deformed folder
 defDir = dir([directory 'Deformed/*.xlsx']);
@@ -47,14 +46,12 @@ defData = defData - dmw;
 dW=taphann2drect(dwx,dwy,h_r_S,h_r_ul);
 defData=defData.*dW;
 
-
-
 % ---Take FFT's, average, and scale
 refFFTs = fft2(refImgsData);
 
 sum = zeros(pixSize, pixSize);
 for i = 1:numRef
-    sum = refFFTs + sum;
+    sum = refFFTs(:,:,i) + sum;
 end
 avgRefFFT = sum ./ numRef; %I average AFTER FFT, I am not sure if I should avg before or after
 avgRefFFTScaled = fftshift(log(1+abs(avgRefFFT)));
