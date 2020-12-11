@@ -45,6 +45,13 @@ defData = defData - dmw;
 dW=taphann2drect(dwx,dwy,h_r_S,h_r_ul);
 defData=defData.*dW;
 
+%average image
+sumima = zeros(pixSize, pixSize);
+for i = 1:numRef
+    sumima = refImgsData(:,:,i) + sumima;
+end
+avgRe = sumima ./ numRef;
+
 % ---Take FFT's, average, and scale
 refFFTs = fft2(refImgsData);
 
@@ -60,9 +67,12 @@ defFFT = fft2(defData);
 defFFTScaled = fftshift(log(1+abs(defFFT)));
 conde = conj(defFFT);
 
+Gdef = fft2(defFFT);
+Gdefscaled = fftshift(log(1+abs(Gdef)));
+
 H1 = avgRefFFT.*conde;
 % H2 = defFFT.*conav;
-% H1scaled = fftshift(log(1+abs(H1)));
+H1scaled = fftshift(log(1+abs(H1)));
 % H2scaled = fftshift(log(1+abs(H2)));
 J1 = abs(avgRefFFT.* defFFT);
 J3 = J1.^0.5;
@@ -123,16 +133,16 @@ dif3 = defFFTScaled-avgRefFFTScaled;
 % title('Method 1-2 Difference Spectrum Image', 'FontSize', 10, 'Interpreter', 'None');
 % colormap(jet);
 
-% figure 6 for inverse fft of average FFT
-figure(6);
-imshow(inv, []);
-title('Inverse FFT of average fft', 'FontSize', 10, 'Interpreter', 'None');
-
+% % figure 6 for inverse fft of average FFT
+% figure(6);
+% imshow(inv, []);
+% title('Inverse FFT of average fft', 'FontSize', 10, 'Interpreter', 'None');
+% 
 % figure(7);
 % imshow(H1scaled, []);
 % title('H1', 'FontSize', 10, 'Interpreter', 'None');
 % colormap(jet);
-% 
+
 % figure(8);
 % imshow(H2scaled, []);
 % title('H2', 'FontSize', 10, 'Interpreter', 'None');
@@ -161,3 +171,16 @@ title('Inverse FFT of average fft', 'FontSize', 10, 'Interpreter', 'None');
 % imshow(G3scaled, []);
 % title('G3', 'FontSize', 10, 'Interpreter', 'None');
 % colormap(jet);
+
+% figure(14);
+% imshow(defData, []);
+% title('D5', 'FontSize', 10, 'Interpreter', 'None');
+
+% figure(15);
+% imshow(avgRe, []);
+% title('Average Image', 'FontSize', 10, 'Interpreter', 'None');
+
+figure(16);
+imshow(Gdef, []);
+title('Gdef', 'FontSize', 10, 'Interpreter', 'None');
+colormap(jet);
