@@ -1,0 +1,35 @@
+% this code will generate csvfile -> stretch -> clean -> xlsx file. 
+
+clear; clc; close all;
+
+%---TO CHANGE
+directory = 'C:\Users\gurwo\Desktop\S_C_H\'; %pwd NEED TO CHANGE THIS TO YOUR DIRRECTORY
+pixSize = 1024; % (Jake this dosent need to change rn, but maybe in future)
+h_r_S=0.1; 
+h_r_ul=0.1; 
+st = 0.1;
+
+
+% ---Get the image data of the deformed from Deformed folder
+
+%%
+
+FileNames = dir('*.csv'); %Specify Base or Tip
+Mlen = length(FileNames);
+
+for i = 1:Mlen;
+    NameStr{i} = FileNames(i).name;    
+end
+
+for ai=1:Mlen
+fname=char(NameStr(ai));
+
+xy1=csvread(fname,19,1);
+xy1=xy1(1:1024,1:1024);
+
+defData = stretch(xy1, st, pixSize);
+
+[defData,av11]=clnimg(defData);
+
+xlswrite(['10%','.xlsx'],defData)
+ end;
