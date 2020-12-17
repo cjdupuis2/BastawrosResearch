@@ -1,4 +1,4 @@
-function[c] = stretch[defData, stretching, pixSize]
+function[c] = stretch(defData, stretching, pixSize)
 
 stretching = 0.5;
 c = zeros(pixSize,pixSize);
