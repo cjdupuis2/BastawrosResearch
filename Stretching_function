@@ -1,6 +1,5 @@
 function[c] = stretch(defData, stretching, pixSize)
 
-stretching = 0.5;
 c = zeros(pixSize,pixSize);
 % stretching : stretching percent/100
 s = stretching;
