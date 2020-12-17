@@ -1,0 +1,23 @@
+function[c] = [defData, stretching, pixSize]
+
+stretching = 0.5;
+c = zeros(pixSize,pixSize);
+% stretching : stretching percent/100
+s = stretching;
+ss = 1+stretching;
+
+for i = 1 : pixSize
+    if rem(i*ss,1) == 0
+        div = i;
+        break
+    end
+end
+
+for i = 2 : pixSize
+for j = 1 : pixSize
+    if i < pixSize
+        k = rem(i,div+1); 
+        c(i,j) = (k*s*defData(floor(i/ss),j)+(ss-s*k)*defData(ceil(i/ss),j))/ss;
+    end
+end
+end
