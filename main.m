@@ -1,4 +1,5 @@
 % By CJ Dupuis + some stuff from Bishoy 
+% This code takes .jpgs as input and cleans the code using clnimg
 
 % You need folder named ToAverage in working dirrectory.
 % Put all reference jpg files here
@@ -22,24 +23,26 @@ refImgsData = zeros(pixSize, pixSize, numRef); %This will contain the jpg data
 for i = 1:numRef
     refNames(i) = [directory 'ToAverage/' refDir(i).name]; %Absolute file path
     temp = imread(refNames(i));
-    [refImgsData(:,:,i), ~] = clnimg(double(temp(:,:,2))); %temp(:,:,2) cause only want green (imread returns 3 dim matrix)
-    %refImgsData(:,:,i) = temp(:,:,2);
+    refImgsData(:,:,i) = temp(:,:,2);
+    defData = stretch(refImgsData,0.2,1024);
+    [refImgsData(:,:,i), ~] = clnimg(refImgsData(:,:,i)); %temp(:,:,2) cause only want green (imread returns 3 dim matrix)
+    [defData, ~] = clnimg(defData);
 end
 
 %% Get the image data of the deformed from Deformed folder and clean
-defDir = dir([directory 'Deformed/*.jpg']);
-temp = imread([directory 'Deformed/' defDir.name]);
-[defData, ~] = clnimg(double(temp(:,:,2)));
-%defData = temp(:,:,2);
+% defDir = dir([directory 'Deformed/*.jpg']);
+% temp = imread([directory 'Deformed/' defDir.name]);
+% defData = temp(:,:,2);
+% %[defData, ~] = clnimg(defData);
 
 %% Take FFT's, average, and scale
-refFFTs = fft2(refImgsData);
-
+refFFTs = fft2(refImgsData); %Average after FFT
 sum = zeros(pixSize, pixSize);
 for i = 1:numRef
     sum = refFFTs(:,:,i) + sum;
 end
-avgRefFFT = sum ./ numRef; %I average AFTER FFT, I am not sure if I should avg before or after
+avgRefFFT = sum ./ numRef;
+
 avgRefFFTScaled = fftshift(log(1+abs(avgRefFFT)));
 
 defFFT = fft2(defData);
@@ -56,26 +59,56 @@ Bi = double(imag(defFFT));
 dif2 = sqrt((Ar - Br).^2 + (Ai - Bi).^2);
 dif2 = fftshift(log(1+abs(dif2)));
 
+
+%% Now get H, G, and inverse
+H = zeros(pixSize,pixSize,numRef);
+G = zeros(pixSize,pixSize,numRef);
+GScaled = zeros(pixSize,pixSize,numRef);
+
+J1 = abs(avgRefFFT .* defFFT);
+J3 = J1.^0.5;
+for i = 1:numRef
+    H(:,:,i) = avgRefFFT .* conj(fft2(refImgsData(:,:,i)));
+    
+    H3 = H(:,:,i) ./ J3;
+    G(:,:,i) = fft2(H3);
+    GScaled(:,:,i) = fftshift(log(1+abs(G(:,:,i))));
+end
+
+inverseFFT = ifft2(avgRefFFT);
+
+
 %% Display Plots
 % I realize this is a riduculous way to display images. I dont understand
-% how it works fully, but this works so I am going to leave for now.
-figure();
-subplot(1,1,1);
-imshow(avgRefFFTScaled, []);
-title('Averaged References Spectrum Image');
+% how it works fully, but this works now so I am going to leave for now.
 
-figure();
-subplot(1,1,1);
-imshow(defFFTScaled, []);
-title('Deformed Spectrum Image');
+% figure();
+% subplot(1,1,1);
+% imshow(avgRefFFTScaled, []);
+% title('Averaged References Spectrum Image');
+% 
+% figure();
+% subplot(1,1,1);
+% imshow(defFFTScaled, []);
+% title('Deformed Spectrum Image');
+% 
+% figure();
+% subplot(1,1,1);
+% imshow(dif1, []);
+% title('Method 1 Difference Spectrum Image');
+% 
+% figure();
+% subplot(1,1,1);
+% imshow(dif2, []);
+% title('Method 2 Difference Spectrum Image');
 
-figure();
-subplot(1,1,1);
-imshow(dif1, []);
-title('Method 1 Difference Spectrum Image');
+% imshow(refImgsData,[]); title('Reference');
+% imshow(defData,[]); title('Deformed 20%');
+% imshow(avgRefFFTScaled,[]);title('Reference FFT Scaled'); xlabel('X'); ylabel('Y');
+% imshow(defFFTScaled,[]);title('Deformed FFT Scaled'); xlabel('X'); ylabel('Y');
+% surf(avgRefFFTScaled); shading flat; colormap(jet);title('Reference FFT Scaled');
+% xlabel('X'); ylabel('Y'); zlabel('Z');
 
-figure();
-subplot(1,1,1);
-imshow(dif2, []);
-title('Method 2 Difference Spectrum Image');
+
+surf(GScaled), shading flat, colormap(jet);
 
