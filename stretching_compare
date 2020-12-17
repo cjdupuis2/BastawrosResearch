@@ -1,0 +1,127 @@
+clear; clc; close all;
+
+%---TO CHANGE
+directory = 'C:\Users\gurwo\Desktop\JakeJake\'; %pwd NEED TO CHANGE THIS TO YOUR DIRRECTORY
+pixSize = 1024; % (Jake this dosent need to change rn, but maybe in future)
+h_r_S=0.1; 
+h_r_ul=0.1; 
+st = 0.2
+
+
+% ---Get the image data of the deformed from Deformed folder
+refDir = dir([directory 'Deformed/*.xlsx']);
+refData = xlsread([directory 'Deformed/' refDir.name]);
+
+defData = stretch(refData, st, pixSize);
+
+%han filter for ref data.
+[dwx,dwy]=size(refData);
+dmw = mean(mean(refData));
+
+refData = refData - dmw;
+dW=taphann2drect(dwx,dwy,h_r_S,h_r_ul);
+refData=refData.*dW;
+
+%han filter for def data.
+[dwx,dwy]=size(defData);
+dmw = mean(mean(defData));
+
+defData = defData - dmw;
+dW=taphann2drect(dwx,dwy,h_r_S,h_r_ul);
+defData=defData.*dW;
+
+refFFT = fft2(refData);
+refFFTScaled = fftshift(log(1+abs(refFFT)));
+conre = conj(refFFT);
+
+defFFT = fft2(defData);
+defFFTScaled = fftshift(log(1+abs(defFFT)));
+conde = conj(defFFT);
+
+H1 = refFFT.*conde;
+H1scaled = fftshift(log(1+abs(H1)));
+
+J1 = abs(refFFT.* defFFT);
+J3 = J1.^0.5;
+H3 = H1./J3;
+G3 = fft2(H3);
+H3scaled = fftshift(log(1+abs(H3)));
+G3scaled = fftshift(log(1+abs(G3)));
+
+% ---Now take the difference of average reference and deformed using 2nd method
+
+% ---Display Plots
+figure(1);
+imshow(refData, []);
+title('Undeformed image', 'FontSize', 10, 'Interpreter', 'None');
+% colormap(jet);
+
+figure(2);
+imshow(defData, []);
+title('Deformed image(120%)', 'FontSize', 10, 'Interpreter', 'None');
+% colormap(jet);
+
+figure(3);
+imshow(refFFTScaled, []);
+title('Undeformed image FFT', 'FontSize', 10, 'Interpreter', 'None');
+colormap(jet);
+
+figure(4);
+imshow(refFFTScaled, []);
+title('Deformed image FFT (120%)', 'FontSize', 10, 'Interpreter', 'None');
+colormap(jet);
+
+figure(5);
+surf(refFFTScaled);
+shading flat;
+title('Undeformed image FFT', 'FontSize', 10, 'Interpreter', 'None');
+xlabel('x')
+ylabel('y')
+colormap(jet);
+
+figure(6);
+surf(defFFTScaled);
+shading flat;
+title('Deformed image FFT (120%)', 'FontSize', 10, 'Interpreter', 'None');
+xlabel('x')
+ylabel('y')
+colormap(jet);
+
+figure(7);
+imshow(H1scaled, []);
+title('F1', 'FontSize', 10, 'Interpreter', 'None');
+colormap(jet);
+
+figure(8);
+surf(H1scaled);
+shading flat;
+title('F1', 'FontSize', 10, 'Interpreter', 'None');
+xlabel('x')
+ylabel('y')
+colormap(jet);
+
+figure(9);
+imshow(H3scaled, []);
+title('F3', 'FontSize', 10, 'Interpreter', 'None');
+colormap(jet);
+
+figure(10);
+surf(H3scaled);
+shading flat;
+title('F3', 'FontSize', 10, 'Interpreter', 'None');
+xlabel('x')
+ylabel('y')
+colormap(jet);
+
+figure(11);
+imshow(G3scaled, []);
+title('G3', 'FontSize', 10, 'Interpreter', 'None');
+colormap(jet);
+
+figure(12);
+surf(G3scaled);
+shading flat;
+title('G3', 'FontSize', 10, 'Interpreter', 'None');
+xlabel('x')
+ylabel('y')
+% colormap(jet);
