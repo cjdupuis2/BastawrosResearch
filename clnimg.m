@@ -15,18 +15,18 @@ for ii=1:xpix
         if trctimg(ii,jj)<=4
             n=n+1;
             isum=isum+xy(ii,jj);
-        end;
-    end;
-end;
+        end
+    end
+end
 avgimg=isum/n;
 
 for ii=1:xpix
     for jj=1:ypix
         if trctimg(ii,jj)>4
             xy(ii,jj)=avgimg;
-        end;
-    end;
-end;
+        end
+    end
+end
 
 
 
@@ -42,7 +42,7 @@ for ii=1: xpix
             a1=xpix-wsize+1;
         else 
             a1=ii-(wsize-1)/2;
-        end;
+        end
         
         if jj<(wsize+1)/2 
             b1=1;
@@ -50,7 +50,7 @@ for ii=1: xpix
             b1=ypix-wsize+1;
         else 
             b1=jj-(wsize-1)/2;
-        end;  
+        end
         
       
         w1=xy(a1:a1+wsize-1,b1:b1+wsize-1);
@@ -60,15 +60,24 @@ for ii=1: xpix
             xy(ii,jj)=(sum(w1(:))-xy(ii,jj))/(wsize^2-1);
 %             disp(ii);
 %             disp(jj);
-        end;
-    end;
-end;
+        end
+    end
+end
 
         
 
 
+%han filter for ref data.
+ h_r_S = 0.1;
+ h_r_ul = 0.1;
+ [dwx,dwy] = size(xy);
+ dmw = mean(mean(xy));
+
+ xy = xy - dmw;
+ dW = taphann2drect(dwx,dwy,h_r_S,h_r_ul);
+ xy = xy.*dW;
+
+end
 
 
-
-% end
 
