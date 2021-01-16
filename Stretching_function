@@ -8,6 +8,7 @@ ss = 1+stretching;
 for i = 1 : pixSize
     if rem(i*ss,1) == 0
         div = i;
+        divss = i*ss;
         break
     end
 end
@@ -15,7 +16,7 @@ end
 for i = 2 : pixSize
 for j = 1 : pixSize
     if i < pixSize
-        k = rem(i,div+1); 
+        k = rem(i,divss); 
         c(i,j) = (k*s*defData(floor(i/ss),j)+(ss-s*k)*defData(ceil(i/ss),j))/ss;
     end
 end
