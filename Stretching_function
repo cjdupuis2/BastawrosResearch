@@ -4,20 +4,39 @@ c = zeros(pixSize,pixSize);
 % stretching : stretching percent/100
 s = stretching;
 ss = 1+stretching;
-
 for i = 1 : pixSize
-    if rem(i*ss,1) == 0
+    if rem(ss,1/i) == 0
         div = i;
         divss = i*ss;
         break
     end
 end
 
+if s >= 0
 for i = 2 : pixSize
+for j = 1 : pixSize 
+        k = rem(i,divss);
+        p = 0;
+        while p*ss < s*k 
+            p = p+1;
+        end    
+        p = p-1;
+        c(i,j) = ((k*s-p*ss)*defData(floor(i/ss),j)+((p+1)*ss-s*k)*defData(ceil(i/ss),j))/ss;
+end
+end
+end
+if s < 0
+for i = 1 : pixSize
 for j = 1 : pixSize
-    if i < pixSize
+    if i/ss < pixSize
         k = rem(i,divss); 
-        c(i,j) = (k*s*defData(floor(i/ss),j)+(ss-s*k)*defData(ceil(i/ss),j))/ss;
+        p = 0;
+        while p*ss < -s*k
+            p = p+1;
+        end    
+        p = p-1;
+        c(i,j) = (((p+1)*ss+k*s)*defData(floor(i/ss),j)+(-p*ss-s*k)*defData(ceil(i/ss),j))/ss;
     end
+end
 end
 end
