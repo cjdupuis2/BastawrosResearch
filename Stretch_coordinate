@@ -1,0 +1,65 @@
+function[c] = stcoor(defData, stretching, pixSize)
+
+c = zeros(pixSize,pixSize);
+% stretching : stretching percent/100
+s = stretching;
+ss = 1+stretching;
+r = round((1+pixSize)/2);
+
+for i = 1 : pixSize
+    if rem(ss,1/i) == 0  
+        div = i;
+        divss = i*ss;
+        break
+    end
+end
+
+if s >= 0
+for i = 2 : pixSize
+for j = 1 : pixSize 
+        p = 0;
+        if i>= r
+            k = rem(i-r,divss);
+            while p*ss < s*k 
+                p = p+1;
+            end    
+            p = p-1;
+            c(i,j) = ((k*s-p*ss)*defData(r+floor((i-r)/ss),j)+((p+1)*ss-s*k)*defData(r+ceil((i-r)/ss),j))/ss;
+        end
+        if i<r
+            k = rem(r-i,divss);
+            while p*ss < s*k 
+                p = p+1;
+            end    
+            p = p-1;
+            c(i,j) = ((k*s-p*ss)*defData(r-floor((r-i)/ss),j)+((p+1)*ss-s*k)*defData(r-ceil((r-i)/ss),j))/ss;
+        end
+end
+end
+end
+if s < 0
+for i = 1 : pixSize
+for j = 1 : pixSize
+    p = 0;
+    if i/ss < pixSize
+        if i>=r
+            k = rem(i-r,divss);
+            while p*ss < -s*k
+                p = p+1;
+            end    
+            p = p-1;
+            c(i,j) = (((p+1)*ss+k*s)*defData(r+floor((i-r)/ss),j)+(-p*ss-s*k)*defData(r+ceil((i-r)/ss),j))/ss;   
+        end
+        
+        if i<r && r+floor((i-r)/ss)>=1
+            k = rem(r-i,divss);
+            while p*ss < -s*k
+                p = p+1;
+            end    
+            p = p-1;
+            c(i,j) = (((p+1)*ss+k*s)*defData(r-floor((r-i)/ss),j)+(-p*ss-s*k)*defData(r-ceil((r-i)/ss),j))/ss;   
+        end
+    end
+end
+end
+end
