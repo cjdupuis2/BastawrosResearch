@@ -15,27 +15,31 @@ end
 if s >= 0
 for i = 2 : pixSize
 for j = 1 : pixSize 
+        q = i/ss;
         k = rem(i,divss);
         p = 0;
-        while p*ss < s*k 
+        while p*ss <= s*k 
             p = p+1;
         end    
         p = p-1;
-        c(i,j) = ((k*s-p*ss)*defData(floor(i/ss),j)+((p+1)*ss-s*k)*defData(ceil(i/ss),j))/ss;
+        c(i,j) = ((k*s-p*ss)*defData(floor(q),j)+((p+1)*ss-s*k)*defData(ceil(q),j))/ss;
 end
 end
 end
+disp(divss);
+
 if s < 0
 for i = 1 : pixSize
 for j = 1 : pixSize
-    if i/ss < pixSize
+    q = i/ss;
+    if q < pixSize
         k = rem(i,divss); 
         p = 0;
-        while p*ss < -s*k
+        while p*ss <= -s*k
             p = p+1;
         end    
         p = p-1;
-        c(i,j) = (((p+1)*ss+k*s)*defData(floor(i/ss),j)+(-p*ss-s*k)*defData(ceil(i/ss),j))/ss;
+        c(i,j) = (((p+1)*ss+k*s)*defData(floor(q),j)+(-p*ss-s*k)*defData(ceil(q),j))/ss;
     end
 end
 end
