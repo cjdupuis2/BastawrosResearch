@@ -54,7 +54,7 @@ for j = 1 : pixSize
                 p = p+1;
             end    
             p = p-1;
-            c(i,j) = (((p+1)*ss+k*s)*defData(r+floor(aa),j)+(-p*ss-s*k)*defData(r+ceil((aa),j))/ss;   
+            c(i,j) = (((p+1)*ss+k*s)*defData(r+floor(aa),j)+(-p*ss-s*k)*defData(r+ceil(aa),j))/ss;   
         end
         bbb = r-i;
         bb = bbb/ss;
