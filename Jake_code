@@ -1,0 +1,136 @@
+clear; clc; close all;
+
+%---TO CHANGE
+directory = 'C:\Users\gurwo\Desktop\Coding\JakeJake-20210108T020227Z-001\JakeJake\'; %pwd NEED TO CHANGE THIS TO YOUR DIRRECTORY
+pixSize = 1024; % (Jake this dosent need to change rn, but maybe in future)
+h_r_S=0.1; 
+h_r_ul=0.1; 
+alpha = 0.01;
+
+%---DON'T NEED TO CHANGE
+%---Get the image data of the references from ToAverage folder
+refDir = dir([directory 'ToAverage/*.xlsx']);
+numRef = length(refDir);
+refNames = strings(numRef, 1);
+refImgsData = zeros(pixSize, pixSize, numRef); %This will contain the jpg data
+refFFTs = zeros(pixSize, pixSize, numRef);
+
+for i = 1:numRef
+    refNames(i) = [directory 'ToAverage/' refDir(i).name]; %Absolute file path
+    refImgsData(:,:,i) = xlsread(refNames(i));
+    
+    %Han filter for the each of images 
+    [wx,wy]=size(refImgsData(:,:,i));
+    mw = mean(mean(refImgsData(:,:,i)));
+    refImgsData(:,:,i) = refImgsData(:,:,i) - mw;
+    W=taphann2drect(wx,wy,h_r_S,h_r_ul);
+    refImgsData(:,:,i)=refImgsData(:,:,i).*W;
+end
+
+% ---Get the image data of the deformed from Deformed folder
+defDir = dir([directory 'Deformed/*.xlsx']);
+defData = xlsread([directory 'Deformed/' defDir.name]);
+defData = stretch2(defData, 0, alpha);
+
+%han filter for def data.
+[dwx,dwy]=size(defData);
+dmw = mean(mean(defData));
+
+defData = defData - dmw;
+dW=taphann2drect(dwx,dwy,h_r_S,h_r_ul);
+defData=defData.*dW;
+
+% ---Take FFT's, average, and scale
+refFFTs = fft2(refImgsData);
+
+sum = zeros(pixSize, pixSize);
+for i = 1:numRef
+    sum = refFFTs(:,:,i) + sum;
+end
+avgRefFFT = sum ./ numRef; %I average AFTER FFT, I am not sure if I should avg before or after
+avgRefFFTScaled = fftshift(log(1+abs(avgRefFFT)));
+%% smooth
+J=1;
+% Refsmooth = normalize(avgRefFFTScaled);
+Refsmooth = avgRefFFTScaled;
+% while J < 2
+%     for I = 1:1024
+%         Refsmooth(:,I) = smooth(Refsmooth(:,I),3);
+%     J=J+1;
+%     end
+% end
+% J=1;
+% while J < 3
+%     for I = 1:1024
+%         Refsmooth(I,:) = smooth(Refsmooth(I,:),7);
+%         0;
+%     J=J+1;
+%     end
+% end
+
+
+conav = conj(avgRefFFT);
+
+defFFT = fft2(defData);
+defFFTScaled = fftshift(log(1+abs(defFFT)));
+
+%% Summation Technique
+% refArea = avgRefFFTScaled(520:720,413:613); %Only need half the fft
+% defArea = defFFTScaled(520:720,413:613);
+
+dist = 0.0001; %Distance between points (percent)
+range = -.02:dist:.02; %Amount of stretch on deformed fft (percent)
+points = length(range);
+summation = zeros(1,points);
+
+% Refsmooth = Refsmooth .* Refsmooth;
+i=1;
+for i = 1:points
+    def = range(i);
+%     fftStretch = stretch(defArea, def , 201);
+    defStretch = stretch2(defFFTScaled, 0, def);
+%     defArea = defStretch(520:720,413:613);
+%     diff = refArea - defArea;
+
+    J=1;
+%     Defsmooth = normalize(defStretch);
+    Defsmooth = defStretch;
+%     while J < 2
+%         for I = 1:1024
+%             Defsmooth(:,I) = smooth(Defsmooth(:,I),3);
+%         J=J+1;
+%         end
+%     end
+%     J=1;
+%     while J < 3
+%         for I = 1:1024
+%             Defsmooth(I,:) = smooth(Defsmooth(I,:),7);
+%         J=J+1;
+%         end
+%     end
+%     Defsmooth = Defsmooth .* Defsmooth;
+
+    diff = Refsmooth - Defsmooth;
+    diff = abs(diff);
+%     diffArea = diff(630:850,513:913);
+    diffArea = diff(613:813,313:713);
+    
+%     diffArea = diff;
+    ss = 0;
+    [a, b] = size(diffArea);
+    for p = 1 : a
+        for q = 1 : b
+            ss = ss+diffArea(p,q);
+        end
+    end
+  
+    summation(i) = ss;
+end
+
+
+
+
+figure(1), plot(range,summation, ':'), title("Summation of difference square: Target = " + num2str(alpha));
+ax = gca;
+ax.FontWeight = 'bold';
+ax.FontSize = 12;
